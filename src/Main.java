@@ -1,50 +1,49 @@
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Scanner;
 
 import javax.imageio.ImageIO;
 
+class Posicao {
+    public int x;
+    public int y;
 
-// Classe que representa um nó da pilha
-class NoPilha {
-    private int x;
-    private int y;
-    private NoPilha abaixo;
-
-    public NoPilha(int x, int y) {
+    public Posicao(int x, int y) {
         this.x = x;
         this.y = y;
-        this.abaixo = null;
     }
-
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public NoPilha getAbaixo() { return abaixo; }
-    public void setAbaixo(NoPilha abaixo) { this.abaixo = abaixo; }
 }
 
-// Classe que representa a pilha
+class NoPilha {
+    public Posicao pos;
+    public NoPilha abaixo;
+
+    public NoPilha(Posicao pos) {
+        this.pos = pos;
+        this.abaixo = null;
+    }
+}
+
 class Pilha {
-    private NoPilha topo;
+    public NoPilha topo;
 
     public Pilha() {
         this.topo = null;
     }
 
-    public void push(int x, int y) {
-        NoPilha novo = new NoPilha(x, y);
-        novo.setAbaixo(this.topo);
-        this.topo = novo;
+    public void push(Posicao pos) {
+        NoPilha no_novo = new NoPilha(pos);
+        no_novo.abaixo = this.topo;
+        this.topo = no_novo;
     }
 
-    public NoPilha pop() {
-        if (isEmpty()) {
-            return null;
-        }
-        NoPilha removido = this.topo;
-        this.topo = this.topo.getAbaixo();
-        removido.setAbaixo(null);
-        return removido;
+    public Posicao pop() {
+        if (this.topo == null) return null;
+
+        NoPilha no_removido = this.topo;
+        this.topo = this.topo.abaixo;
+        return no_removido.pos;
     }
 
     public boolean isEmpty() {
@@ -52,7 +51,6 @@ class Pilha {
     }
 }
 
-// Classe que representa um nó da fila
 class NoFila {
     private int x;
     private int y;
@@ -70,7 +68,7 @@ class NoFila {
     public void setProximo(NoFila proximo) { this.proximo = proximo; }
 }
 
-// Classe que representa a fila
+
 class Fila {
     private NoFila inicio;
     private NoFila fim;
@@ -111,77 +109,125 @@ class Fila {
         return this.inicio == null;
     }
 }
+class ImagemService {
+    public BufferedImage imagem_atual;
 
-
-// Classe responsável por carregar e salvar imagens
-class ImageService {
-    private BufferedImage imagemAtual; // Armazena a imagem carregada atualmente
-
-    public boolean carregarImagem(String caminho) {
+    public void carregarImagem(String caminho) {
         try {
             File arquivo = new File(caminho);
-            this.imagemAtual = ImageIO.read(arquivo);
+            this.imagem_atual = ImageIO.read(arquivo);
 
-            if (this.imagemAtual == null) {
-                System.out.println("Erro: O caminho especificado não contém uma imagem válida.");
-                return false;
+            if (this.imagem_atual == null) {
+                System.out.println("Erro ao carregar imagem.");
+            } else {
+                System.out.println("Imagem carregada.");
             }
-
-            System.out.println("Sucesso! Imagem carregada (Largura: " + imagemAtual.getWidth() + "px, Altura: " + imagemAtual.getHeight() + "px)");
-            return true;
         } catch (Exception e) {
-            System.out.println("Erro ao abrir a imagem. Tem certeza que o caminho '" + caminho + "' tá certo?");
-            return false;
+            System.out.println("Erro ao abrir arquivo.");
         }
     }
 
-    public void salvarImagem(String caminhoSaida) { // Salva a imagem atual em um arquivo BMP
+    public void salvarImagem(String caminho_saida, boolean exibir_mensagem) {
         try {
-            if (this.imagemAtual == null) {
-                System.out.println("Erro: Nenhuma imagem foi carregada ainda.");
-                return;
+            if (this.imagem_atual != null) {
+                File arquivo_saida = new File(caminho_saida);
+                ImageIO.write(this.imagem_atual, "bmp", arquivo_saida);
+                if (exibir_mensagem) {
+                    System.out.println("Imagem salva: " + caminho_saida);
+                }
             }
-
-            File arquivoSaida = new File(caminhoSaida);
-
-            ImageIO.write(this.imagemAtual, "bmp", arquivoSaida);
-            System.out.println("Imagem salva em: " + caminhoSaida);
-            
         } catch (Exception e) {
-            System.out.println("Erro ao salvar a imagem: " + e.getMessage());
+            System.out.println("Erro ao salvar imagem.");
         }
-    }
-
-    public BufferedImage getImagemAtual() {
-        return this.imagemAtual;
     }
 }
+class FloodFill {
 
+    public static void preencherComPilha(ImagemService service, int startX, int startY, int novaCor) {
+        BufferedImage img = service.imagem_atual;
+        int largura = img.getWidth();
+        int altura = img.getHeight();
 
+        if (startX < 0 || startX >= largura || startY < 0 || startY >= altura) {
+            System.out.println("Coordenada fora da imagem.");
+            return;
+        }
 
+        int cor_original = img.getRGB(startX, startY);
+        if (cor_original == novaCor) {
+            System.out.println("Cor igual à original.");
+            return;
+        }
 
-// Classe principal do programa
+        Pilha pilha = new Pilha();
+        pilha.push(new Posicao(startX, startY));
+
+        int passos = 0;
+        int frames = 0;
+
+        while (!pilha.isEmpty()) {
+            Posicao pos_atual = pilha.pop();
+            int x = pos_atual.x;
+            int y = pos_atual.y;
+
+            if (x < 0 || x >= largura || y < 0 || y >= altura) continue;
+            if (img.getRGB(x, y) != cor_original) continue;
+
+            img.setRGB(x, y, novaCor);
+            passos++;
+
+            if (passos % 300 == 0) {
+                frames++;
+                service.salvarImagem(String.format("pilha_passo_%04d.bmp", frames), false);
+            }
+
+            pilha.push(new Posicao(x, y - 1));
+            pilha.push(new Posicao(x, y + 1));
+            pilha.push(new Posicao(x - 1, y));
+            pilha.push(new Posicao(x + 1, y));
+        }
+
+        frames++;
+        service.salvarImagem(String.format("pilha_passo_%04d.bmp", frames), true);
+        System.out.println("Concluído. Pixels alterados: " + passos);
+    }
+
+}
+
 public class Main {
     public static void main(String[] args) {
-        Scanner input = new Scanner(System.in);
-        ImageService geradorImagens = new ImageService(); // Instância do serviço de imagens
+        Scanner scanner = new Scanner(System.in);
+        ImagemService imagemService = new ImagemService();
+
+        int X_inicial = -1;
+        int Y_inicial = -1;
 
         while (true) {
-            System.out.println("\n=================================");
             System.out.println("1 - Executar com pilha");
             System.out.println("2 - Executar com fila");
             System.out.println("3 - Escolher imagem");
             System.out.println("4 - Escolher coordenada de inicio");
             System.out.println("0 - Encerrar");
-            System.out.println("=================================");
-            int opcao = input.nextInt();
-            input.nextLine(); // Limpar o buffer
+            int opcao = scanner.nextInt();
+            scanner.nextLine();
 
             switch (opcao) {
                 // Executar com pilha
                 case 1:
-                    System.out.println("Executando com pilha...");
-                    geradorImagens.salvarImagem("saida.bmp"); 
+                    if (imagemService.imagem_atual == null) {
+                        System.out.println("Carregue uma imagem primeiro.");
+                    } else if (X_inicial == -1 || Y_inicial == -1) {
+                        System.out.println("Defina a coordenada inicial primeiro.");
+                    } else {
+                        System.out.println("Digite a nova cor RGB (R G B):");
+                        int r = scanner.nextInt();
+                        int g = scanner.nextInt();
+                        int b = scanner.nextInt();
+                        int nova_cor = new Color(r, g, b).getRGB();
+
+                        System.out.println("Executando com pilha...");
+                        FloodFill.preencherComPilha(imagemService, X_inicial, Y_inicial, nova_cor);
+                    }
                     break;
                 // Executar com fila
                 case 2:
@@ -189,9 +235,9 @@ public class Main {
                     break;
                 // Escolher imagem
                 case 3:
-                    System.out.println("Digite o caminho da imagem:");
-                    String caminho = input.nextLine();
-                    geradorImagens.carregarImagem(caminho);
+                    System.out.print("Caminho da imagem: ");
+                    String B = scanner.nextLine();
+                    imagemService.carregarImagem(B);
                     break;
                 // Escolher coordenada de inicio
                 case 4:
@@ -200,7 +246,7 @@ public class Main {
                 // Encerrar
                 case 0:
                     System.out.println("Encerrando...");
-                    input.close(); 
+                    scanner.close();
                     return;
                 // Opção inválida
                 default:
