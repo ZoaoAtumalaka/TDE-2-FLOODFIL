@@ -133,9 +133,3 @@ Concluído. Pixels alterados: 3249
 - Se a coordenada estiver fora da imagem, o programa exibe "Coordenada fora da imagem.". Se a nova cor for igual à cor original do pixel, exibe "Cor igual à original." Em ambos os casos nada é alterado.
 - Se o caminho da imagem estiver errado ou o arquivo não for uma imagem válida, o programa exibe "Erro ao abrir arquivo." ou "Erro ao carregar imagem.".
 - Digite apenas números inteiros no menu, nas coordenadas e nas cores. Valores de cor fora do intervalo 0–255 ou texto no lugar de números fazem o programa encerrar com erro.
-
----
-
-## Licença
-
-Distribuído sob a licença MIT. Veja o arquivo [LICENSE](LICENSE).
