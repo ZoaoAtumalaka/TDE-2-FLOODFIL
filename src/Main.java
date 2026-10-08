@@ -1,9 +1,104 @@
+// =====================================================================================================
+// PARTE 2 DO TDE DE RESOLUÇÃO DE PROBLEMAS -> FLOOD FILL COM PILHA E FILA
+// ALUNOS: JOÃO KAUDY, GUSTAVO GAWLAK, LUCAS RETZLAFF
+// PROFESSOR: ARAMIS
+// =====================================================================================================
+
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Scanner;
 
 import javax.imageio.ImageIO;
+
+// =====================================================================================================
+
+public class Main {
+
+    public static void main(String[] args) {
+
+        Scanner scanner = new Scanner(System.in);
+        ImagemService imagemService = new ImagemService();
+
+        int X_inicial = -1;
+        int Y_inicial = -1;
+
+        while (true) {
+
+            System.out.println("\n--- MENU FLOOD FILL ---");
+            System.out.println("1. Executar com pilha");
+            System.out.println("2. Executar com fila");
+            System.out.println("3. Escolher imagem");
+            System.out.println("4. Escolher coordenada de inicio");
+            System.out.println("0. Encerrar");
+            System.out.print("Opção: ");
+
+            int A = scanner.nextInt();
+            scanner.nextLine();
+
+            switch (A) {
+                case 1:
+                    if (imagemService.imagem_atual == null) {
+                        System.out.println("Carregue uma imagem primeiro.");
+                    } else if (X_inicial == -1 || Y_inicial == -1) {
+                        System.out.println("Defina a coordenada inicial primeiro.");
+                    } else {
+                        System.out.println("Digite a nova cor RGB (R G B):");
+                        int r = scanner.nextInt();
+                        int g = scanner.nextInt();
+                        int b = scanner.nextInt();
+                        int nova_cor = new Color(r, g, b).getRGB();
+
+                        System.out.println("Executando com pilha...");
+                        FloodFill.preencherComPilha(imagemService, X_inicial, Y_inicial, nova_cor);
+                    }
+                    break;
+
+                case 2:
+                    if (imagemService.imagem_atual == null) {
+                        System.out.println("Carregue uma imagem primeiro.");
+                    } else if (X_inicial == -1 || Y_inicial == -1) {
+                        System.out.println("Defina a coordenada inicial primeiro.");
+                    } else {
+                        System.out.println("Digite a nova cor RGB (R G B):");
+                        int r2 = scanner.nextInt();
+                        int g2 = scanner.nextInt();
+                        int b2 = scanner.nextInt();
+                        int nova_cor2 = new Color(r2, g2, b2).getRGB();
+
+                        System.out.println("Executando com fila...");
+                        FloodFill.preencherComFila(imagemService, X_inicial, Y_inicial, nova_cor2);
+                    }
+                    break;
+
+                case 3:
+                    System.out.print("Caminho da imagem: ");
+                    String B = scanner.nextLine();
+                    imagemService.carregarImagem(B);
+                    break;
+
+                case 4:
+                    System.out.print("Coordenada X: ");
+                    X_inicial = scanner.nextInt();
+                    System.out.print("Coordenada Y: ");
+                    Y_inicial = scanner.nextInt();
+                    System.out.println("Coordenada definida: (" + X_inicial + ", " + Y_inicial + ")");
+                    break;
+
+                case 0:
+                    System.out.println("Encerrando...");
+                    scanner.close();
+                    return;
+
+                default:
+                    System.out.println("Opção inválida.");
+                    break;
+            }
+        }
+    }
+}
+
+// =====================================================================================================
 
 class Posicao {
     public int x;
@@ -14,6 +109,10 @@ class Posicao {
         this.y = y;
     }
 }
+
+// =====================================================================================================
+// ESTRUTURA DA PILHA E SEU NÓ
+// =====================================================================================================
 
 class NoPilha {
     public Posicao pos;
@@ -51,10 +150,14 @@ class Pilha {
     }
 }
 
+// =====================================================================================================
+// ESTRUTURA DA FILA E SEU NÓ
+// =====================================================================================================
+
 class NoFila {
     public Posicao pos;
-    public NoFila proximo; 
-    
+    public NoFila proximo;
+
     public NoFila(Posicao pos) {
         this.pos = pos;
         this.proximo = null;
@@ -64,42 +167,45 @@ class NoFila {
 class Fila {
     public NoFila inicio;
     public NoFila fim;
-    
+
     public Fila() {
         this.inicio = null;
         this.fim = null;
     }
-    
+
     public void enqueue(Posicao pos) {
         NoFila no_novo = new NoFila(pos);
-        
+
         if (this.inicio == null) {
             this.inicio = no_novo;
             this.fim = no_novo;
         } else {
             this.fim.proximo = no_novo;
-            this.fim = no_novo; 
+            this.fim = no_novo;
         }
     }
-    
+
     public Posicao dequeue() {
         if (this.inicio == null) return null;
-        
+
         NoFila no_removido = this.inicio;
-        this.inicio = this.inicio.proximo; 
-        
+        this.inicio = this.inicio.proximo;
+
         if (this.inicio == null) {
-            this.fim = null; 
+            this.fim = null;
         }
-        
+
         return no_removido.pos;
     }
-    
+
     public boolean isEmpty() {
         return this.inicio == null;
     }
 }
 
+// =====================================================================================================
+// CLASSE PARA ABRIR E SALVAR A IMAGEM
+// =====================================================================================================
 
 class ImagemService {
     public BufferedImage imagem_atual;
@@ -133,6 +239,11 @@ class ImagemService {
         }
     }
 }
+
+// =====================================================================================================
+// ALGORITMO FLOOD FILL
+// =====================================================================================================
+
 class FloodFill {
 
     public static void preencherComPilha(ImagemService service, int startX, int startY, int novaCor) {
@@ -231,68 +342,5 @@ class FloodFill {
         frames++;
         service.salvarImagem(String.format("fila_passo_%04d.bmp", frames), true);
         System.out.println("Concluído. Pixels alterados: " + passos);
-    }
-
-}
-
-public class Main {
-    public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        ImagemService imagemService = new ImagemService();
-
-        int X_inicial = -1;
-        int Y_inicial = -1;
-
-        while (true) {
-            System.out.println("1 - Executar com pilha");
-            System.out.println("2 - Executar com fila");
-            System.out.println("3 - Escolher imagem");
-            System.out.println("4 - Escolher coordenada de inicio");
-            System.out.println("0 - Encerrar");
-            int opcao = scanner.nextInt();
-            scanner.nextLine();
-
-            switch (opcao) {
-                // Executar com pilha
-                case 1:
-                    if (imagemService.imagem_atual == null) {
-                        System.out.println("Carregue uma imagem primeiro.");
-                    } else if (X_inicial == -1 || Y_inicial == -1) {
-                        System.out.println("Defina a coordenada inicial primeiro.");
-                    } else {
-                        System.out.println("Digite a nova cor RGB (R G B):");
-                        int r = scanner.nextInt();
-                        int g = scanner.nextInt();
-                        int b = scanner.nextInt();
-                        int nova_cor = new Color(r, g, b).getRGB();
-
-                        System.out.println("Executando com pilha...");
-                        FloodFill.preencherComPilha(imagemService, X_inicial, Y_inicial, nova_cor);
-                    }
-                    break;
-                // Executar com fila
-                case 2:
-                    System.out.println("Executando com fila...");
-                    break;
-                // Escolher imagem
-                case 3:
-                    System.out.print("Caminho da imagem: ");
-                    String B = scanner.nextLine();
-                    imagemService.carregarImagem(B);
-                    break;
-                // Escolher coordenada de inicio
-                case 4:
-                    System.out.println("Escolhendo coordenada de inicio...");
-                    break;
-                // Encerrar
-                case 0:
-                    System.out.println("Encerrando...");
-                    scanner.close();
-                    return;
-                // Opção inválida
-                default:
-                    System.out.println("Opção inválida. Tente novamente.");
-            }
-        }
     }
 }
