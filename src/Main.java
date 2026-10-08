@@ -229,9 +229,9 @@ class ImagemService {
         try {
             if (this.imagem_atual != null) {
                 File arquivo_saida = new File(caminho_saida);
-                ImageIO.write(this.imagem_atual, "bmp", arquivo_saida);
+                ImageIO.write(this.imagem_atual, "png", arquivo_saida);
                 if (exibir_mensagem) {
-                    System.out.println("Imagem salva: " + caminho_saida);
+                    System.out.println("Imagem salva: " + arquivo_saida.getAbsolutePath());
                 }
             }
         } catch (Exception e) {
@@ -281,7 +281,7 @@ class FloodFill {
 
             if (passos % 300 == 0) {
                 frames++;
-                service.salvarImagem(String.format("pilha_passo_%04d.bmp", frames), false);
+                service.salvarImagem(String.format("pilha_passo_%04d.png", frames), false);
             }
 
             pilha.push(new Posicao(x, y - 1));
@@ -291,7 +291,7 @@ class FloodFill {
         }
 
         frames++;
-        service.salvarImagem(String.format("pilha_passo_%04d.bmp", frames), true);
+        service.salvarImagem(String.format("pilha_passo_%04d.png", frames), true);
         System.out.println("Concluído. Pixels alterados: " + passos);
     }
 
@@ -330,7 +330,7 @@ class FloodFill {
 
             if (passos % 300 == 0) {
                 frames++;
-                service.salvarImagem(String.format("fila_passo_%04d.bmp", frames), false);
+                service.salvarImagem(String.format("fila_passo_%04d.png", frames), false);
             }
 
             fila.enqueue(new Posicao(x, y - 1));
@@ -340,7 +340,7 @@ class FloodFill {
         }
 
         frames++;
-        service.salvarImagem(String.format("fila_passo_%04d.bmp", frames), true);
+        service.salvarImagem(String.format("fila_passo_%04d.png", frames), true);
         System.out.println("Concluído. Pixels alterados: " + passos);
     }
 }
