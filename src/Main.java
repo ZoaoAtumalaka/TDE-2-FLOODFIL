@@ -52,63 +52,55 @@ class Pilha {
 }
 
 class NoFila {
-    private int x;
-    private int y;
-    private NoFila proximo;
-
-    public NoFila(int x, int y) {
-        this.x = x;
-        this.y = y;
+    public Posicao pos;
+    public NoFila proximo; 
+    
+    public NoFila(Posicao pos) {
+        this.pos = pos;
         this.proximo = null;
     }
-
-    public int getX() { return x; }
-    public int getY() { return y; }
-    public NoFila getProximo() { return proximo; }
-    public void setProximo(NoFila proximo) { this.proximo = proximo; }
 }
 
-
 class Fila {
-    private NoFila inicio;
-    private NoFila fim;
-
+    public NoFila inicio;
+    public NoFila fim;
+    
     public Fila() {
         this.inicio = null;
         this.fim = null;
     }
-
-    public void enqueue(int x, int y) {
-        NoFila novo = new NoFila(x, y);
-
-        if (isEmpty()) {
-            this.inicio = novo;
-            this.fim = novo;
-        } else {
-            this.fim.setProximo(novo);
-            this.fim = novo;
-        }
-    }
-
-    public NoFila dequeue() {
-        if (isEmpty()) {
-            return null;
-        }
-        NoFila removido = this.inicio;
-        this.inicio = this.inicio.getProximo();
-
+    
+    public void enqueue(Posicao pos) {
+        NoFila no_novo = new NoFila(pos);
+        
         if (this.inicio == null) {
-            this.fim = null;
+            this.inicio = no_novo;
+            this.fim = no_novo;
+        } else {
+            this.fim.proximo = no_novo;
+            this.fim = no_novo; 
         }
-
-        removido.setProximo(null);
-        return removido;
     }
-
+    
+    public Posicao dequeue() {
+        if (this.inicio == null) return null;
+        
+        NoFila no_removido = this.inicio;
+        this.inicio = this.inicio.proximo; 
+        
+        if (this.inicio == null) {
+            this.fim = null; 
+        }
+        
+        return no_removido.pos;
+    }
+    
     public boolean isEmpty() {
         return this.inicio == null;
     }
 }
+
+
 class ImagemService {
     public BufferedImage imagem_atual;
 
@@ -189,6 +181,55 @@ class FloodFill {
 
         frames++;
         service.salvarImagem(String.format("pilha_passo_%04d.bmp", frames), true);
+        System.out.println("Concluído. Pixels alterados: " + passos);
+    }
+
+    public static void preencherComFila(ImagemService service, int startX, int startY, int novaCor) {
+        BufferedImage img = service.imagem_atual;
+        int largura = img.getWidth();
+        int altura = img.getHeight();
+
+        if (startX < 0 || startX >= largura || startY < 0 || startY >= altura) {
+            System.out.println("Coordenada fora da imagem.");
+            return;
+        }
+
+        int cor_original = img.getRGB(startX, startY);
+        if (cor_original == novaCor) {
+            System.out.println("Cor igual à original.");
+            return;
+        }
+
+        Fila fila = new Fila();
+        fila.enqueue(new Posicao(startX, startY));
+
+        int passos = 0;
+        int frames = 0;
+
+        while (!fila.isEmpty()) {
+            Posicao pos_atual = fila.dequeue();
+            int x = pos_atual.x;
+            int y = pos_atual.y;
+
+            if (x < 0 || x >= largura || y < 0 || y >= altura) continue;
+            if (img.getRGB(x, y) != cor_original) continue;
+
+            img.setRGB(x, y, novaCor);
+            passos++;
+
+            if (passos % 300 == 0) {
+                frames++;
+                service.salvarImagem(String.format("fila_passo_%04d.bmp", frames), false);
+            }
+
+            fila.enqueue(new Posicao(x, y - 1));
+            fila.enqueue(new Posicao(x, y + 1));
+            fila.enqueue(new Posicao(x - 1, y));
+            fila.enqueue(new Posicao(x + 1, y));
+        }
+
+        frames++;
+        service.salvarImagem(String.format("fila_passo_%04d.bmp", frames), true);
         System.out.println("Concluído. Pixels alterados: " + passos);
     }
 
